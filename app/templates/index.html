@@ -1,0 +1,565 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GIF Maker</title>
+  <style>
+    :root{
+      color-scheme: dark;
+      --bg1:#060913;
+      --bg2:#0b1130;
+      --card: rgba(255,255,255,.06);
+      --card2: rgba(255,255,255,.03);
+      --stroke: rgba(255,255,255,.10);
+      --text: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.60);
+      --accent: #5b66ff;
+      --accent2:#7a5cff;
+      --good:#2ecc71;
+      --bad:#ff5c6c;
+      --shadow: 0 24px 80px rgba(0,0,0,.45);
+      --radius: 18px;
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Liberation Sans", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(1200px 800px at 20% 0%, rgba(92,102,255,.22), transparent 60%),
+        radial-gradient(900px 700px at 80% 30%, rgba(122,92,255,.18), transparent 60%),
+        linear-gradient(180deg, var(--bg2), var(--bg1) 60%);
+      min-height:100vh;
+      padding:28px;
+    }
+
+    .wrap{
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap: 18px;
+      align-items:start;
+    }
+
+    .card{
+      background: var(--card);
+      border: 1px solid var(--stroke);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+      padding: 18px;
+    }
+
+    h1{
+      font-size: 18px;
+      margin: 0 0 6px 0;
+      letter-spacing:.2px;
+    }
+    .sub{
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 14px;
+      line-height: 1.35;
+    }
+
+    .split{
+      display:grid;
+      grid-template-rows: auto 1fr;
+      gap: 14px;
+      min-height: 620px;
+    }
+
+    .uploadBox{
+      border: 1px dashed rgba(255,255,255,.18);
+      background: var(--card2);
+      border-radius: 14px;
+      padding: 14px;
+    }
+
+    .row{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    label{
+      display:block;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    input[type="number"], select{
+      width: 100%;
+      height: 42px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(8,12,24,.65);
+      color: var(--text);
+      padding: 0 12px;
+      outline: none;
+    }
+    input[type="number"]:focus, select:focus{
+      border-color: rgba(91,102,255,.6);
+      box-shadow: 0 0 0 3px rgba(91,102,255,.15);
+    }
+
+    select, option{
+      background: #0b0f1a;
+      color: var(--text);
+    }
+
+    .presets{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top: 6px;
+    }
+    .chip{
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.04);
+      color: rgba(255,255,255,.9);
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 12px;
+      cursor:pointer;
+      user-select:none;
+    }
+    .chip:hover{ border-color: rgba(91,102,255,.5); }
+
+    .hint{
+      margin-top: 6px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .btn{
+      height: 46px;
+      border: 0;
+      width: 100%;
+      border-radius: 14px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      color: white;
+      font-weight: 650;
+      font-size: 14px;
+      letter-spacing:.2px;
+      cursor:pointer;
+    }
+    .btn:disabled{
+      opacity:.55;
+      cursor:not-allowed;
+    }
+
+    .btnSecondary{
+      display:none;
+      height: 44px;
+      width: 100%;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color: rgba(255,255,255,.92);
+      text-align:center;
+      line-height: 44px;
+      text-decoration:none;
+      font-weight: 600;
+      cursor:pointer;
+    }
+    .btnSecondary.show{ display:block; }
+
+    .actions{
+      display:flex;
+      flex-direction:column;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .status{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 10px;
+    }
+    .dot{
+      width: 8px; height:8px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.22);
+    }
+    .dot.good{ background: var(--good); }
+    .dot.bad{ background: var(--bad); }
+
+    .preview{
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.03);
+      border-radius: 16px;
+      overflow:hidden;
+      min-height: 360px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      position: relative;
+    }
+    .preview img{
+      max-width: 100%;
+      max-height: 100%;
+      display:block;
+    }
+    .preview .ph{
+      color: rgba(255,255,255,.45);
+      font-size: 13px;
+      padding: 20px;
+      text-align:center;
+    }
+
+    .fileList{
+      margin-top: 12px;
+      display:flex;
+      flex-direction:column;
+      gap: 8px;
+      max-height: 180px;
+      overflow:auto;
+      padding-right: 6px;
+    }
+    .fileItem{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.18);
+      border-radius: 14px;
+      padding: 8px 10px;
+      cursor: grab;
+      user-select:none;
+    }
+    .fileItem:active{ cursor: grabbing; }
+    .thumb{
+      width: 44px; height: 28px;
+      border-radius: 8px;
+      overflow:hidden;
+      flex: 0 0 auto;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.06);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .thumb img{ width:100%; height:100%; object-fit: cover; display:block; }
+    .meta{
+      min-width:0;
+      flex:1 1 auto;
+    }
+    .name{
+      font-size: 13px;
+      white-space: nowrap;
+      overflow:hidden;
+      text-overflow: ellipsis;
+    }
+    .small{
+      font-size: 12px;
+      color: var(--muted);
+      margin-top:2px;
+    }
+    .idx{
+      font-weight: 700;
+      font-size: 12px;
+      color: rgba(255,255,255,.75);
+      padding: 0 6px;
+      flex: 0 0 auto;
+    }
+
+    @media (max-width: 980px){
+      body{ padding:16px; }
+      .grid{ grid-template-columns: 1fr; }
+      .split{ min-height: unset; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="grid">
+
+    <div class="card split">
+      <div>
+        <h1>GIF Maker</h1>
+        <div class="sub">Загрузите скриншоты → проверьте порядок → выберите размер → соберите GIF </div>
+
+        <div class="uploadBox">
+          <label>Файлы (jpg/png/webp)</label>
+          <input id="files" type="file" multiple accept="image/png,image/jpeg,image/webp" />
+          <div class="hint">Порядок кадров = порядок списка ниже. Можно перетаскивать элементы, чтобы поменять порядок.</div>
+
+          <div id="fileList" class="fileList" style="display:none;"></div>
+        </div>
+      </div>
+
+      <div class="preview" id="preview">
+        <div class="ph">После сборки тут появится превью результата.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h1>Настройки</h1>
+
+      <div class="row">
+        <div>
+          <label>Ширина</label>
+          <input id="w" type="number" value="3024" min="1" max="7000" step="1" />
+        </div>
+        <div>
+          <label>Высота</label>
+          <input id="h" type="number" value="1898" min="1" max="7000" step="1" />
+        </div>
+      </div>
+
+      <div class="presets">
+        <div class="chip" data-w="3024" data-h="1898">3024×1898</div>
+        <div class="chip" data-w="2560" data-h="1200">2560×1200</div>
+        <div class="chip" data-w="2560" data-h="1195">2560×1195</div>
+      </div>
+
+      <div style="margin-top:12px;">
+        <label>Скорость (fps)</label>
+        <input id="fps" type="number" value="0.5" min="0.01" max="60" step="any" inputmode="decimal" />
+        <div class="hint" id="fpsHint">0.5 fps = 2.0 секунды на кадр</div>
+      </div>
+
+      <div style="margin-top:12px;">
+        <label>Заполнение</label>
+        <select id="fit">
+          <option value="stretch">Stretch (как раньше, ровно в размер)</option>
+          <option value="cover">Cover + crop (без искажений)</option>
+        </select>
+      </div>
+
+      <div style="margin-top:12px;">
+        <label>Формат</label>
+        <select disabled>
+          <option>GIF</option>
+        </select>
+      </div>
+
+      <div class="actions">
+        <button class="btn" id="buildBtn">Собрать</button>
+        <a class="btnSecondary" id="downloadBtn" href="#" download="result.gif">Скачать результат</a>
+      </div>
+
+      <div class="status">
+        <div class="dot" id="dot"></div>
+        <div id="statusText">Готово</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const fileInput = document.getElementById('files');
+  const fileListEl = document.getElementById('fileList');
+  const previewEl = document.getElementById('preview');
+
+  const wEl = document.getElementById('w');
+  const hEl = document.getElementById('h');
+  const fpsEl = document.getElementById('fps');
+  const fpsHintEl = document.getElementById('fpsHint');
+  const fitEl = document.getElementById('fit');
+
+  const buildBtn = document.getElementById('buildBtn');
+  const downloadBtn = document.getElementById('downloadBtn');
+  const dotEl = document.getElementById('dot');
+  const statusTextEl = document.getElementById('statusText');
+
+  let filesArr = [];
+  let dragFrom = null;
+  let objectUrls = [];
+  let resultUrl = null;
+
+  function setStatus(kind, text){
+    dotEl.classList.remove('good','bad');
+    if(kind === 'good') dotEl.classList.add('good');
+    if(kind === 'bad') dotEl.classList.add('bad');
+    statusTextEl.textContent = text;
+  }
+
+  function fmtBytes(b){
+    const u = ['B','KB','MB','GB'];
+    let i=0, v=b;
+    while(v>=1024 && i<u.length-1){ v/=1024; i++; }
+    return (i===0? v : v.toFixed(1)) + ' ' + u[i];
+  }
+
+  function clearObjectUrls(){
+    for(const u of objectUrls) URL.revokeObjectURL(u);
+    objectUrls = [];
+  }
+
+  function renderFileList(){
+    if(filesArr.length === 0){
+      fileListEl.style.display = 'none';
+      fileListEl.innerHTML = '';
+      return;
+    }
+    fileListEl.style.display = 'flex';
+    fileListEl.innerHTML = '';
+
+    filesArr.forEach((f, idx) => {
+      const item = document.createElement('div');
+      item.className = 'fileItem';
+      item.draggable = true;
+      item.dataset.index = idx;
+
+      const thumb = document.createElement('div');
+      thumb.className = 'thumb';
+      const img = document.createElement('img');
+      const url = URL.createObjectURL(f);
+      objectUrls.push(url);
+      img.src = url;
+      thumb.appendChild(img);
+
+      const meta = document.createElement('div');
+      meta.className = 'meta';
+
+      const name = document.createElement('div');
+      name.className = 'name';
+      name.textContent = f.name;
+
+      const small = document.createElement('div');
+      small.className = 'small';
+      small.textContent = `${fmtBytes(f.size)}`;
+
+      meta.appendChild(name);
+      meta.appendChild(small);
+
+      const idxEl = document.createElement('div');
+      idxEl.className = 'idx';
+      idxEl.textContent = (idx + 1);
+
+      item.appendChild(idxEl);
+      item.appendChild(thumb);
+      item.appendChild(meta);
+
+      item.addEventListener('dragstart', (e) => {
+        dragFrom = Number(item.dataset.index);
+        e.dataTransfer.effectAllowed = 'move';
+      });
+      item.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+      });
+      item.addEventListener('drop', (e) => {
+        e.preventDefault();
+        const to = Number(item.dataset.index);
+        if(dragFrom === null || dragFrom === to) return;
+
+        const moved = filesArr.splice(dragFrom, 1)[0];
+        filesArr.splice(to, 0, moved);
+        dragFrom = null;
+
+        clearObjectUrls();
+        renderFileList();
+        setStatus('good', `Порядок кадров: ${filesArr.length} файлов`);
+      });
+
+      fileListEl.appendChild(item);
+    });
+  }
+
+  function updateFpsHint(){
+    const raw = String(fpsEl.value || '').replace(',', '.');
+    const fps = Math.max(0.01, Number(raw) || 0.5);
+    const sec = (1 / fps);
+    fpsHintEl.textContent = `${fps} fps = ${sec.toFixed(1)} секунды на кадр`;
+  }
+
+  document.querySelectorAll('.chip').forEach(ch => {
+    ch.addEventListener('click', () => {
+      wEl.value = ch.dataset.w;
+      hEl.value = ch.dataset.h;
+    });
+  });
+
+  fpsEl.addEventListener('input', updateFpsHint);
+  updateFpsHint();
+
+  fileInput.addEventListener('change', () => {
+    clearObjectUrls();
+    filesArr = Array.from(fileInput.files || []);
+    renderFileList();
+    if(filesArr.length){
+      setStatus('good', `Порядок кадров: ${filesArr.length} файлов`);
+    }else{
+      setStatus(null, 'Готово');
+    }
+  });
+
+  async function buildGif(){
+    if(filesArr.length === 0){
+      setStatus('bad', 'Выбери файлы');
+      return;
+    }
+
+    if(resultUrl){
+      URL.revokeObjectURL(resultUrl);
+      resultUrl = null;
+    }
+    downloadBtn.classList.remove('show');
+
+    const width = Number(wEl.value) || 3024;
+    const height = Number(hEl.value) || 1898;
+
+    const fpsRaw = String(fpsEl.value || '0.5').replace(',', '.');
+    const fps = Math.max(0.01, Number(fpsRaw) || 0.5);
+
+    const fit = fitEl.value;
+
+    const fd = new FormData();
+    filesArr.forEach(f => fd.append('files', f, f.name));
+    fd.append('width', String(width));
+    fd.append('height', String(height));
+    fd.append('fps', String(fps));
+    fd.append('fit', fit);
+
+    buildBtn.disabled = true;
+    setStatus(null, 'Собираю…');
+
+    try{
+      const res = await fetch('/api/render', { method:'POST', body: fd });
+      if(!res.ok){
+        const txt = await res.text();
+        throw new Error(txt || ('HTTP ' + res.status));
+      }
+      const blob = await res.blob();
+
+      resultUrl = URL.createObjectURL(blob);
+      previewEl.innerHTML = '';
+      const img = document.createElement('img');
+      img.src = resultUrl;
+      previewEl.appendChild(img);
+
+      const fname = `result_${width}x${height}.gif`;
+      downloadBtn.href = resultUrl;
+      downloadBtn.download = fname;
+      downloadBtn.classList.add('show');
+
+      setStatus('good', 'Готово ✅');
+    }catch(e){
+      console.error(e);
+      setStatus('bad', 'Ошибка сборки (см. консоль/логи)');
+    }finally{
+      buildBtn.disabled = false;
+    }
+  }
+
+  buildBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    buildGif();
+  });
+</script>
+</body>
+</html>
